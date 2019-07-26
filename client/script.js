@@ -79,7 +79,6 @@ function createCustomer(paymentMethod, cardholderEmail) {
       return response.json();
     })
     .then(function(subscription) {
-      console.log(subscription);
       if (
         subscription &&
         subscription.latest_invoice.payment_intent.status === "requires_action"
@@ -89,11 +88,29 @@ function createCustomer(paymentMethod, cardholderEmail) {
             subscription.latest_invoice.payment_intent.client_secret
           )
           .then(function(result) {
-            orderComplete(subscription);
+            confirmSubscription(subscription.id);
           });
       } else {
         orderComplete(subscription);
       }
+    });
+}
+
+function confirmSubscription(subscriptionId) {
+  return fetch("/subscription", {
+    method: "post",
+    headers: {
+      "Content-type": "application/json"
+    },
+    body: JSON.stringify({
+      subscriptionId: subscriptionId
+    })
+  })
+    .then(function(response) {
+      return response.json();
+    })
+    .then(function(subscription) {
+      orderComplete(subscription);
     });
 }
 
@@ -105,11 +122,9 @@ function getPublicKey() {
     }
   })
     .then(function(response) {
-      console.log(response);
       return response.json();
     })
     .then(function(response) {
-      console.log(response);
       stripeElements(response.publicKey);
     });
 }

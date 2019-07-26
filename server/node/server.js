@@ -49,6 +49,13 @@ app.post("/create-customer", async (req, res) => {
   res.send(subscription);
 });
 
+app.post("/subscription", async (req, res) => {
+  let subscription = await stripe.subscriptions.retrieve(
+    req.body.subscriptionId
+  );
+  res.send(subscription);
+});
+
 // Webhook handler for asynchronous events.
 app.post("/webhook", async (req, res) => {
   let data;
