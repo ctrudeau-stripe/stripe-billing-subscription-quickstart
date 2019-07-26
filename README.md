@@ -4,13 +4,13 @@ This sample shows how to create a customer and subscribe them to a plan with
 [Stripe Billing](https://stripe.com/billing). For step by step directions of how to
 implement this use the [Stripe Billing quickstart](https://stripe.com/docs/billing/quickstart)
 
-See a hosted version of the demo in test mode or fork on codesandbox.io
+See a hosted version of the [demo](https://lbq6y.sse.codesandbox.io/) in test mode or fork on [codesandbox.io](https://codesandbox.io/s/stripe-billing-quickstart-demo-lbq6y)
 <img src="billing-quickstart.gif" alt="Preview of recipe" align="center">
 
 Features:
 
-- Create payment methods :credit_card: 
-- Add that payment method to your customer 
+- Create payment methods :credit_card:
+- Add that payment method to your customer
 - Subscibe the that customer to a plan in Stripe Billing :moneybag:
 
 ## How to run locally
