@@ -48,9 +48,8 @@ app.post("/create-customer", async (req, res) => {
   });
   // At this point, associate the ID of the Customer object with your
   // own internal representation of a customer, if you have one.
-
   const subscription = await stripe.subscriptions.create({
-    customer: customer.customerId,
+    customer: customer.id,
     items: [{ plan: "plan_FSDjyHWis0QVwl" }],
     expand: ["latest_invoice.payment_intent"]
   });
