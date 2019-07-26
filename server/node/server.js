@@ -19,14 +19,6 @@ app.use(
   })
 );
 
-async function subscribeCustomerToPlan(customerId) {
-  return await stripe.subscriptions.create({
-    customer: customerId,
-    items: [{ plan: "plan_FSDjyHWis0QVwl" }],
-    expand: ["latest_invoice.payment_intent"]
-  });
-}
-
 app.get("/", (req, res) => {
   const path = resolve(__dirname, "../../client/index.html");
   res.sendFile(path);
