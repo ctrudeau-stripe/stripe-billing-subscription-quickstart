@@ -5,7 +5,7 @@ This sample shows how to create a customer and subscribe them to a plan with
 implement this use the [Stripe Billing quickstart](https://stripe.com/docs/billing/quickstart)
 
 See a hosted version of the [demo](https://lbq6y.sse.codesandbox.io/) in test mode or fork on [codesandbox.io](https://codesandbox.io/s/stripe-billing-quickstart-demo-lbq6y)
-<img src="billing-quickstart.gif" alt="Preview of recipe" align="center">
+<img src="billing-subscriptions-quickstart.gif" alt="Preview of recipe" align="center">
 
 Features:
 
