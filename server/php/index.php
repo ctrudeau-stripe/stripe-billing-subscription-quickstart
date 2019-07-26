@@ -74,6 +74,15 @@ $app->post('/create-customer', function (Request $request, Response $response, a
   return $response->withJson($subscription);
 });
 
+$app->post('/subscription', function (Request $request, Response $response, array $args) {  
+  $body = json_decode($request->getBody());
+
+  $subscription = \Stripe\Subscription::retrieve($body->subscriptionId);
+
+
+  return $response->withJson($subscription);
+});
+
 
 $app->post('/webhook', function(Request $request, Response $response) {
     $logger = $this->get('logger');

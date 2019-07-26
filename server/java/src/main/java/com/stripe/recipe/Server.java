@@ -38,6 +38,15 @@ public class Server {
         }
     }
 
+    static class CreateSubscriptionBody {
+        @SerializedName("subscriptionId")
+        String subscriptionId;
+
+        public String getSubscriptionId() {
+            return subscriptionId;
+        }
+    }
+
     public static void main(String[] args) {
         port(4242);
         Stripe.apiKey = System.getenv("STRIPE_SECRET_KEY");
@@ -82,6 +91,13 @@ public class Server {
             Subscription subscription = Subscription.create(params);
 
             return subscription.toJson();
+        });
+
+        post("/subscription", (request, response) -> {
+            response.type("application/json");
+
+            CreateSubscriptionBody postBody = gson.fromJson(request.body(), CreateSubscriptionBody.class);
+            return Subscription.retrieve(postBody.getSubscriptionId()).toJson();
         });
 
         post("/webhook", (request, response) -> {

@@ -62,12 +62,13 @@ def create_customer():
     except Exception as e:
         return jsonify(e), 403
 
-@app.route('/', methods=['POST'])
-def post_example():
+@app.route('/subscription', methods=['POST'])
+def getSubscription():
     # Reads application/json and returns a response
     data = json.loads(request.data)
     try:
-        return jsonify({'data': data})
+        subscription = stripe.Subscription.retrieve(data['subscriptionId'])
+        return jsonify(subscription)
     except Exception as e:
         return jsonify(e), 403
 
