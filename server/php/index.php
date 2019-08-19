@@ -2,12 +2,15 @@
 use Slim\Http\Request;
 use Slim\Http\Response;
 use Stripe\Stripe;
+
 require 'vendor/autoload.php';
-if (PHP_SAPI == 'cli-server') {
-  $_SERVER['SCRIPT_NAME'] = '/index.php';
-}
-$dotenv = Dotenv\Dotenv::create(realpath('../..'));
+
+$ENV_PATH = '../..';
+$dotenv = Dotenv\Dotenv::create(realpath($ENV_PATH));
 $dotenv->load();
+
+require './config.php';
+
 $app = new \Slim\App;
 // Instantiate the logger as a dependency
 $container = $app->getContainer();
@@ -22,21 +25,9 @@ $app->add(function ($request, $response, $next) {
     Stripe::setApiKey(getenv('STRIPE_SECRET_KEY'));
     return $next($request, $response);
 });
-$app->get('/css/normalize.css', function (Request $request, Response $response, array $args) { 
-  return $response->withHeader('Content-Type', 'text/css')->write(file_get_contents('../../client/css/normalize.css'));
-});
-$app->get('/css/global.css', function (Request $request, Response $response, array $args) { 
-  return $response->withHeader('Content-Type', 'text/css')->write(file_get_contents('../../client/css/global.css'));
-});
-$app->get('/script.js', function (Request $request, Response $response, array $args) { 
-  return $response->withHeader('Content-Type', 'text/javascript')->write(file_get_contents('../../client/script.js'));
-});
-$app->get('/pasha-card.svg', function (Request $request, Response $response, array $args) { 
-  return $response->withHeader('Content-Type', 'image/svg+xml')->write(file_get_contents('../../client/pasha-card.svg'));
-});
 $app->get('/', function (Request $request, Response $response, array $args) {   
   // Display checkout page
-  return $response->write(file_get_contents('../../client/index.html'));
+  return $response->write(file_get_contents(getenv('STATIC_DIR') . '/index.html'));
 });
 
 $app->get('/public-key', function (Request $request, Response $response, array $args) {
@@ -78,11 +69,8 @@ $app->post('/subscription', function (Request $request, Response $response, arra
   $body = json_decode($request->getBody());
 
   $subscription = \Stripe\Subscription::retrieve($body->subscriptionId);
-
-
   return $response->withJson($subscription);
 });
-
 
 $app->post('/webhook', function(Request $request, Response $response) {
     $logger = $this->get('logger');

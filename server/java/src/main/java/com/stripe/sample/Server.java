@@ -1,8 +1,6 @@
-package com.stripe.recipe;
+package com.stripe.sample;
 
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 
 import static spark.Spark.get;
 import static spark.Spark.post;
@@ -19,6 +17,12 @@ import com.stripe.model.Event;
 import com.stripe.model.Subscription;
 import com.stripe.exception.*;
 import com.stripe.net.Webhook;
+import com.stripe.param.CustomerCreateParams;
+import com.stripe.param.SubscriptionCreateParams;
+import com.stripe.param.CustomerCreateParams.InvoiceSettings;
+import com.stripe.param.SubscriptionCreateParams.Item;
+
+import io.github.cdimascio.dotenv.Dotenv;
 
 public class Server {
     private static Gson gson = new Gson();
@@ -49,16 +53,18 @@ public class Server {
 
     public static void main(String[] args) {
         port(4242);
-        Stripe.apiKey = System.getenv("STRIPE_SECRET_KEY");
+        String ENV_FILE_PATH = "../../";
+        Dotenv dotenv = Dotenv.configure().directory(ENV_FILE_PATH).load();
 
+        Stripe.apiKey = dotenv.get("STRIPE_SECRET_KEY");
+        System.out.println("key " + dotenv.get("STRIPE_SECRET_KEY"));
         staticFiles.externalLocation(
-                Paths.get(Paths.get("").toAbsolutePath().getParent().getParent().toString() + "/client")
-                        .toAbsolutePath().toString());
+                Paths.get(Paths.get("").toAbsolutePath().toString(), dotenv.get("STATIC_DIR")).normalize().toString());
 
         get("/public-key", (request, response) -> {
             response.type("application/json");
             JsonObject publicKey = new JsonObject();
-            publicKey.addProperty("publicKey", System.getenv("STRIPE_PUBLIC_KEY"));
+            publicKey.addProperty("publicKey", dotenv.get("STRIPE_PUBLIC_KEY"));
             return publicKey.toString();
         });
 
@@ -66,29 +72,22 @@ public class Server {
             response.type("application/json");
 
             CreatePaymentBody postBody = gson.fromJson(request.body(), CreatePaymentBody.class);
+
+            InvoiceSettings settings = new CustomerCreateParams.InvoiceSettings.Builder()
+                    .setDefaultPaymentMethod(postBody.getPaymentMethod()).build();
+
             // This creates a new Customer and attaches the PaymentMethod in one API call.
-            Map<String, Object> customerParams = new HashMap<String, Object>();
-            customerParams.put("payment_method", postBody.getPaymentMethod());
-            customerParams.put("email", postBody.getEmail());
-            Map<String, String> invoiceSettings = new HashMap<String, String>();
-            invoiceSettings.put("default_payment_method", postBody.getPaymentMethod());
-            customerParams.put("invoice_settings", invoiceSettings);
+            CustomerCreateParams.Builder customerBuilder = new CustomerCreateParams.Builder();
+            customerBuilder.setEmail(postBody.getEmail()).setPaymentMethod(postBody.getPaymentMethod())
+                    .setInvoiceSettings(settings);
 
-            Customer customer = Customer.create(customerParams);
+            Customer customer = Customer.create(customerBuilder.build());
 
-            // Subscribe customer to a plan
-            Map<String, Object> item = new HashMap<>();
-            item.put("plan", "plan_FSDjyHWis0QVwl");
-            Map<String, Object> items = new HashMap<>();
-            items.put("0", item);
+            SubscriptionCreateParams createParams = new SubscriptionCreateParams.Builder().setCustomer(customer.getId())
+                    .addItem(new Item.Builder().setPlan("plan_FSDjyHWis0QVwl").build())
+                    .addExpand("latest_invoice.payment_intent").build();
 
-            Map<String, Object> expand = new HashMap<>();
-            expand.put("0", "latest_invoice.payment_intent");
-            Map<String, Object> params = new HashMap<>();
-            params.put("customer", customer.getId());
-            params.put("items", items);
-            params.put("expand", expand);
-            Subscription subscription = Subscription.create(params);
+            Subscription subscription = Subscription.create(createParams);
 
             return subscription.toJson();
         });
@@ -101,10 +100,9 @@ public class Server {
         });
 
         post("/webhook", (request, response) -> {
-            System.out.println("Webhook");
             String payload = request.body();
             String sigHeader = request.headers("Stripe-Signature");
-            String endpointSecret = System.getenv("STRIPE_WEBHOOK_SECRET");
+            String endpointSecret = dotenv.get("STRIPE_WEBHOOK_SECRET");
 
             Event event = null;
 
